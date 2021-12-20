@@ -1,9 +1,9 @@
 CFILES=xcwd.c
 CC=gcc
-CFLAGS=-Wall -Wextra -std=gnu99 -O2
+CFLAGS=-Wall -Wextra -Werror -std=gnu99 -O2
 LDFLAGS=-lX11
 EXE=xcwd
-prefix=/usr
+prefix=~/.local
 UNAME:=$(shell uname)
 O=${CFILES:.c=.o}
 
@@ -32,7 +32,7 @@ distclean: clean
 	rm -vf ${EXE}
 
 install: ${EXE}
-	install -m 0755 ${EXE} $(prefix)/bin
+	install -m 0755 ${EXE} $(prefix)/bin/${EXE}
 
 
 ${EXE}: ${O}
