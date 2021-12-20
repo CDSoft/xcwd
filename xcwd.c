@@ -5,6 +5,7 @@
  */
 
 #include <limits.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -33,6 +34,14 @@
 
 #define LOG(fmt, ...) \
     do { if (DEBUG) fprintf(stderr, fmt, __VA_ARGS__); } while (0)
+
+const char *blacklist[] = {
+    "clangd",
+    "clangd.main",
+    "lua-language-server",
+    "xclip",
+    NULL
+};
 
 Display *dpy;
 
@@ -153,6 +162,18 @@ static void freeProcesses(processes_t p)
     free(p);
 }
 
+static bool blacklisted(const char *name)
+{
+    const size_t n = strlen(name);
+    for (int i = 0; blacklist[i] != NULL; i++)
+    {
+        if (strncmp(name, blacklist[i], n) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static processes_t getProcesses(void)
 {
     processes_t p = NULL;
@@ -176,16 +197,20 @@ static processes_t getProcesses(void)
         tn = fopen(name, "r");
         if (tn == NULL)
             continue;
-        fread(line, 200, 1, tn);
-        p->ps[j].pid = atoi(strtok(line, " "));
-        k = snprintf(p->ps[j].name, 32, "%s", strtok(NULL, " ") + 1);
-        p->ps[j].name[k - 1] = 0;
-        strtok(NULL, " "); // discard process state
-        p->ps[j].ppid = atoi(strtok(NULL, " "));
-        LOG("\t%-20s\tpid=%6ld\tppid=%6ld\n", p->ps[j].name, p->ps[j].pid,
-                p->ps[j].ppid);
+        size_t n = fread(line, 200, 1, tn);
+        if (n > 0) {
+            p->ps[j].pid = atoi(strtok(line, " "));
+            k = snprintf(p->ps[j].name, 32, "%s", strtok(NULL, " ") + 1);
+            p->ps[j].name[k - 1] = 0;
+            strtok(NULL, " "); // discard process state
+            p->ps[j].ppid = atoi(strtok(NULL, " "));
+            LOG("\t%-20s\tpid=%6ld\tppid=%6ld\n", p->ps[j].name, p->ps[j].pid,
+                    p->ps[j].ppid);
+            if (!blacklisted(p->ps[j].name)) {
+                j++;
+            }
+        }
         fclose(tn);
-        j++;
     }
     p->n = j;
     globfree(&globbuf);
