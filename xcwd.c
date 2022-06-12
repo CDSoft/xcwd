@@ -36,9 +36,16 @@
     do { if (DEBUG) fprintf(stderr, fmt, __VA_ARGS__); } while (0)
 
 const char *blacklist[] = {
+    "bash-language-server",
     "clangd",
     "clangd.main",
+    "dot-language-server",
+    "elm-language-server",
     "lua-language-server",
+    "nimlsp",
+    "pasls",
+    "pyright-langserver",
+    "zls",
     "xclip",
     NULL
 };
